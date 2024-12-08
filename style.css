@@ -1,0 +1,121 @@
+* {
+    box-sizing: border-box;
+  }
+  
+  /*Ez később átírásra kerül*/
+  img {
+    margin: 0.3rem;
+  }
+
+  .card {
+    display: inline-block;
+    width: 100px;
+    height: 150px;
+    margin: 10px;
+    text-align: center;
+  }
+  
+  .card img {
+    width: 100%;
+    height: 100%;
+  }
+  
+  
+  .datas {
+    list-style-type: none;
+    display: flex;
+    justify-content: space-around;
+  }
+  
+  .game-table {
+    max-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+  }
+  
+  .gamefield {
+    margin: 0 auto;
+    width: 75%;
+    height: 350px;
+    /* border: 1px solid black;
+      background-color: #A0522D; */
+  }
+  
+  .players-area {
+    display: flex;
+    justify-content: center;
+    border: 1px solid black;
+    background-color: #35654d;
+    position: absolute;
+    width: 100vw;
+    bottom: 0;
+  }
+  
+  .sign {
+    border: 1px solid white;
+    animation: borderPulse 1s infinite;
+  }
+  
+  .player-h2 {
+    display: flex;
+    justify-content: center;
+    color: whitesmoke;
+  }
+  
+  .inside-table {
+    margin: 1rem;
+    padding: 1rem;
+    border: 2px solid black;
+    border-radius: 0.5rem;
+    /* background-color: black; */
+    width: 800px;
+    height: 340px;
+  }
+  
+  .computer-card {
+    border: 2px solid red;
+    border-radius: 12px;
+  }
+  
+  /* .computer-display {
+    display: none;
+  } */
+  
+  .isVisible {
+    visibility: hidden;
+  }
+  
+  @keyframes borderPulse {
+    0% {
+      border-color: rgba(255, 255, 255, 1);
+    }
+    50% {
+      border-color: rgba(255, 255, 255, 0);
+    }
+    100% {
+      border-color: rgba(255, 255, 255, 1);
+    }
+  }
+  
+  @media only screen and (max-height: 800px) {
+    img {
+      width: 130px;
+    }
+  
+    .game-table {
+      min-height: 650px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+    }
+  
+    .players-area {
+      display: flex;
+      justify-content: center;
+      border: 1px solid black;
+      background-color: #35654d;
+      position: static;
+    }
+  }
+  
