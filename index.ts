@@ -292,9 +292,7 @@ function playerManageCards() {
       }
     }
     function processPlayerCard(selectedAlt: string) {
-      let index = playerCards.findIndex((card) =>
-        card.img.alt.includes(`alt=${selectedAlt}`)
-      );
+      let index = playerCards.findIndex((card) => card.img.alt === selectedAlt);
       if (index > -1) {
         playerCards.splice(index, 1);
         updateGameTable(playerCards, playerGameTable);
@@ -303,6 +301,7 @@ function playerManageCards() {
         tempCardholder.push(playerCurrentKey);
         playerKeys.splice(index, 1);
       }
+      console.log("playerKeys: ", playerKeys);
 
       renderDatas();
       playerGameTable.removeEventListener("click", handleClick);
@@ -315,10 +314,112 @@ function playerManageCards() {
   });
 }
 
+// Computer manage cards
+
+function computerManageCards() {
+  debugger;
+  // Első eset: Ez csak a második körtől érvényes: Nem a computer kezdett és nincs olyan lapja amit a játékos rakott, vagy 7-es lapja.
+  if (
+    gameField.childElementCount !== 0 &&
+    gameField.firstChild !== null &&
+    gameField.firstChild instanceof HTMLElement &&
+    gameField.firstChild.className === "computer-card" &&
+    computerCurrentKey !== playerCurrentKey &&
+    Number(playerCurrentKey) !== 12
+  ) {
+    return;
+  }
+  // Ez egy blokkoló, hogy ha a 3. körben is rakni akarna. Ezt később felülvizsgálni.
+  if (
+    gameField.childElementCount === 6 &&
+    gameField.lastChild !== null &&
+    gameField.lastChild instanceof HTMLElement &&
+    gameField.lastChild.className === "computer-card"
+  ) {
+    return;
+  }
+  // Ellenőrizzük, hogy a computer nem rak le újabb lapot, ha már két lap van lent és a computeré az utolsó
+  if (
+    gameField.childElementCount === 2 &&
+    gameField.lastChild !== null &&
+    gameField.lastChild instanceof HTMLElement &&
+    gameField.lastChild.className === "computer-card"
+  ) {
+    return;
+  }
+
+  // A második körtől érvényes: Ha a computer kezdte a kört, a játékos ütötte, akkor kötelező a computernek lapot raknia, ha nem tudja ütni, más lapot kell raknia, de valamit kötelező.
+  if (
+    gameField.childElementCount > 0 &&
+    gameField.firstChild !== null &&
+    gameField.firstChild !== null &&
+    gameField.firstChild instanceof HTMLElement &&
+    (playerCurrentKey ===
+      (gameField.firstChild as HTMLImageElement).alt.slice(1) ||
+      playerCurrentKey === "12") &&
+    gameField.lastChild !== null &&
+    !computerKeys.includes(
+      Number((gameField.lastChild as HTMLImageElement).alt)
+    ) &&
+    !computerKeys.includes(12)
+  ) {
+    // return roundEvaluation();
+  }
+  // Ha a gameField üres, a computer random lapot rak
+  if (gameField.childElementCount === 0) {
+    let nums = computerKeys.map((key) => key.toString().slice(1));
+    let lowValueCards = nums.filter((num) => {
+      return ["2", "3", "4", "8", "9"].includes(num); // Helyes hívás
+    });
+
+    let randomCardKey =
+      lowValueCards.length > 0
+        ? lowValueCards[Math.floor(Math.random() * lowValueCards.length)]
+        : computerKeys[Math.floor(Math.random() * computerKeys.length)];
+    playComputerCard(randomCardKey);
+    return;
+  }
+
+  // Ha van még lap, és a computer képes érdemben játszani, akkor válasszuk ki a megfelelő kártyalapot.
+
+  // let validCard = findValidCard();
+  // if (validCard) {
+  //   playComputerCard(validCard);
+  // }
+}
+
+function playComputerCard(cardKey: any) {
+  // A computerKey szám
+  let isContains = computerKeys.indexOf(cardKey);
+  computerCurrentKey = computerKeys[isContains].toString();
+  tempCardholder.push(computerCurrentKey);
+  computerKeys.splice(isContains, 1);
+
+  let computerIndex = computerKeys.findIndex((card) => {
+    card === Number(computerCurrentKey);
+  });
+
+  if (computerIndex >= 0) {
+    let cardHtml = computerCards[computerIndex];
+    let tempDiv = document.createElement("div");
+    tempDiv.innerHTML = cardHtml;
+    let cardElement = tempDiv.firstChild;
+    if (cardElement !== null) {
+      (cardElement as HTMLElement).classList.add("computer-card"); // Piros keret hozzáadása
+      gameField.appendChild(cardElement);
+    }
+    computerCards.splice(computerIndex, 1);
+  }
+}
+
 // Ez csak teszt, később bővítve lesz:
 
-async function playerTurn() {
-  await playerManageCards();
+// async function playerTurn() {
+//   await playerManageCards();
+// }
+
+async function computerTurn() {
+  computerManageCards();
 }
 
 async function startGame() {
@@ -330,7 +431,8 @@ async function startGame() {
   computerKeys = getCardKeys(computerCards);
   renderDatas();
   startButtonVisibility();
-  await playerTurn();
+  // await playerTurn();
+  await computerTurn();
 }
 
 startButton.addEventListener("click", startGame);
