@@ -3,14 +3,16 @@
   }
   
   /*Ez később átírásra kerül*/
-  img {
+  /* img {
     margin: 0.3rem;
-  }
+  } */
 
   .card {
     display: inline-block;
     width: 100px;
     height: 150px;
+    /* width: 150px;
+    height: 210px; */
     margin: 10px;
     text-align: center;
   }
@@ -71,6 +73,8 @@
     /* background-color: black; */
     width: 800px;
     height: 340px;
+    display: flex;
+    justify-content: center;
   }
   
   .computer-card {
