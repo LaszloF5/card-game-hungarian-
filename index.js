@@ -284,7 +284,6 @@ function playerManageCards() {
 }
 // Computer manage cards
 function computerManageCards() {
-    debugger;
     // Első eset: Ez csak a második körtől érvényes: Nem a computer kezdett és nincs olyan lapja amit a játékos rakott, vagy 7-es lapja.
     if (gameField.childElementCount !== 0 &&
         gameField.firstChild !== null &&
@@ -317,9 +316,9 @@ function computerManageCards() {
             gameField.firstChild.alt.slice(1) ||
             playerCurrentKey === "12") &&
         gameField.lastChild !== null &&
-        !computerKeys.includes(Number(gameField.lastChild.alt)) &&
-        !computerKeys.includes(12)) {
-        // return roundEvaluation();
+        !computerKeys.includes(gameField.lastChild.alt) &&
+        !computerKeys.includes("12")) {
+        return roundEvaluation();
     }
     // Ha a gameField üres, a computer random lapot rak
     if (gameField.childElementCount === 0) {
@@ -334,31 +333,130 @@ function computerManageCards() {
         return;
     }
     // Ha van még lap, és a computer képes érdemben játszani, akkor válasszuk ki a megfelelő kártyalapot.
-    // let validCard = findValidCard();
-    // if (validCard) {
-    //   playComputerCard(validCard);
-    // }
+    let validCard = findValidCard();
+    if (validCard) {
+        playComputerCard(validCard);
+    }
 }
 function playComputerCard(cardKey) {
     // A computerKey szám
-    let isContains = computerKeys.indexOf(cardKey);
-    computerCurrentKey = computerKeys[isContains].toString();
+    console.log("computer keys: ", computerKeys);
+    let numArr = computerKeys.map((str) => str.slice(1));
+    let isContains = numArr.indexOf(cardKey); // A computer adott lapjának az indexe.
+    computerCurrentKey = computerKeys[isContains];
     tempCardholder.push(computerCurrentKey);
+    // let computerIndex = computerKeys.findIndex((card) => {
+    //   card === Number(computerCurrentKey);
+    // });
+    let computerCurrentCard = computerKeys[isContains];
     computerKeys.splice(isContains, 1);
-    let computerIndex = computerKeys.findIndex((card) => {
-        card === Number(computerCurrentKey);
-    });
-    if (computerIndex >= 0) {
-        let cardHtml = computerCards[computerIndex];
-        let tempDiv = document.createElement("div");
-        tempDiv.innerHTML = cardHtml;
-        let cardElement = tempDiv.firstChild;
-        if (cardElement !== null) {
-            cardElement.classList.add("computer-card"); // Piros keret hozzáadása
-            gameField.appendChild(cardElement);
-        }
-        computerCards.splice(computerIndex, 1);
+    if (computerCurrentCard) {
+        console.log("computer cards: ", computerCards);
+        let cardHtml = computerCards[isContains].img;
+        let cardHtmlValue = computerCards[isContains].value;
+        // Itt a cardHtml egy objektum, ami tartalmazza value-t, és az img-t is. (Ha az 1-es index nincs ott.)
+        // Kell egy img tag, aminek az src lesz a cardHtml
+        let tempDiv = document.createElement("img");
+        tempDiv.src = cardHtml;
+        tempDiv.alt = cardHtmlValue;
+        tempDiv.classList.add("computer-card");
+        gameField.appendChild(tempDiv);
+        computerCards.splice(isContains, 1);
+        updateGameTable(computerCards, computerGameTable);
     }
+}
+// Computer számára lap keresése
+function findValidCard() {
+    if (gameField !== null && gameField.firstChild instanceof HTMLImageElement) {
+        const firstChild = gameField.firstChild;
+        let validCard = computerKeys.find((key) => key === firstChild.alt.slice(1) || key === "12");
+        if (!validCard) {
+            let computerCardNumbers = computerKeys.map((key) => key.slice(1));
+            validCard = computerCardNumbers.find((key) => {
+                ["2", "3", "4", "8", "9"].includes(key);
+            });
+        }
+        if (!validCard) {
+            let computerCardNumbers = computerKeys.map((key) => key.slice(1));
+            validCard = computerCardNumbers.find((key) => {
+                ["10", "11", "12"].includes(key);
+            });
+        }
+        return validCard;
+    }
+}
+function playerTurn() {
+    return __awaiter(this, void 0, void 0, function* () {
+        // Ha a játékos kezd:
+        if (gameField.childElementCount === 0) {
+            yield playerManageCards();
+            return;
+        }
+        // 1. feltétel: Ha a gameField !== 0, és a computer rakta le az első lapot.
+        if (gameField.childElementCount !== 0 &&
+            gameField.firstChild !== null &&
+            gameField.firstChild instanceof HTMLImageElement) {
+            // 1.1 feltétel
+            // if (gameField.firstChild.className === 'computer-card' && !playerKeys.includes(Number(gameField.firstChild.alt.slice(1))) && !playerKeys.includes(12)) {
+            // Itt szerintem az utolsó 2 feltétel értelmetlen.
+            // }
+            if (gameField.firstChild.className === "computer-card") {
+                yield playerManageCards();
+                setTimeout(() => __awaiter(this, void 0, void 0, function* () {
+                    yield roundEvaluation();
+                }), 2000);
+            }
+            // A másik kódban lévő 2. feltétel az előző után jön, fölösleges.
+        }
+        // 2. feltétel: Ha elfogyott a pakli.
+        if (deck.length === 0) {
+            // Ez már a játék vége kb.
+            // 2.1 feltétel: Ha a gameField nem üres:
+            if (gameField.childElementCount > 0 &&
+                gameField !== null &&
+                gameField.firstChild !== null &&
+                gameField.firstChild instanceof HTMLImageElement &&
+                gameField.firstChild.className !== "computer-card") {
+                // 2.1.1 feltétel:
+                if ((gameField.firstChild !== null &&
+                    gameField.firstChild instanceof HTMLImageElement &&
+                    playerKeys.includes(Number(gameField.firstChild.alt.slice(1)))) ||
+                    playerKeys.includes(12)) {
+                    yield playerManageCards();
+                    return;
+                }
+                else {
+                    // Itt a játékos nem rak, mert nincs mit,vagyis a játékos kezdte a kört.
+                    setTimeout(() => __awaiter(this, void 0, void 0, function* () {
+                        yield roundEvaluation();
+                    }), 2000);
+                }
+            }
+            else if (gameField.childElementCount > 0 &&
+                gameField !== null &&
+                gameField.firstChild !== null &&
+                gameField.firstChild instanceof HTMLImageElement &&
+                gameField.firstChild.className === "computer-card") {
+                yield playerManageCards();
+                setTimeout(() => __awaiter(this, void 0, void 0, function* () {
+                    yield roundEvaluation();
+                }), 2000);
+            }
+        }
+        // 3. feltétel
+        if (playerKeys.length < 4) {
+            // 3.1 feltétel: Ha a játékosnak van ütőlapja
+            if (playerKeys.includes(12) ||
+                (gameField.firstChild instanceof HTMLImageElement &&
+                    gameField.firstChild !== null &&
+                    playerKeys.includes(Number(gameField.firstChild.alt.slice(1))))) {
+                yield playerManageCards();
+                setTimeout(() => __awaiter(this, void 0, void 0, function* () {
+                    yield roundEvaluation();
+                }), 2000);
+            }
+        }
+    });
 }
 // Ez csak teszt, később bővítve lesz:
 // async function playerTurn() {
@@ -366,7 +464,113 @@ function playComputerCard(cardKey) {
 // }
 function computerTurn() {
     return __awaiter(this, void 0, void 0, function* () {
-        computerManageCards();
+        setTimeout(() => {
+            computerManageCards();
+        }, 1000);
+    });
+}
+// Ha a játékos kezdi a kört
+function nextPlayerRound() {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield playerTurn();
+        yield computerTurn();
+        yield roundEvaluation();
+        return;
+    });
+}
+// Ha a computer kezdi a kört
+function nextComputerRound() {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield computerTurn();
+        yield playerTurn();
+        yield roundEvaluation();
+        return;
+    });
+}
+function endGame() {
+    if (playerPoints > computerPoints) {
+        alert("Nyertél!");
+    }
+    else if (computerPoints > playerPoints) {
+        alert("A számítógép nyert!");
+    }
+    else {
+        alert("Döntetlen!");
+    }
+}
+function roundEvaluation() {
+    return __awaiter(this, void 0, void 0, function* () {
+        // aki utoljára helyezte le a kártyalapot, megmutatja, hogy melyik játékos kezdte a kört : gameField.lastChild.alt[1];
+        setTimeout(() => {
+            kiertekeles();
+        }, 2000);
+    });
+}
+function handlePlayerWins() {
+    return __awaiter(this, void 0, void 0, function* () {
+        for (let i = 0; i < tempCardholder.length; ++i) {
+            playerOwnedCards += 1;
+            if (tempCardholder[i] >= 10 && tempCardholder[i] < 12) {
+                playerPoints += 1;
+            }
+        }
+        renderAfterRound();
+        if (deck.length === 0 &&
+            playerCards.length === 0 &&
+            computerCards.length === 0) {
+            setTimeout(() => {
+                endGame();
+            }, 2000);
+            setTimeout(() => {
+                playerGameTable.classList.remove("sign");
+                startButton.style.visibility = "visible";
+                location.reload();
+            }, 2500);
+        }
+        else {
+            yield playerTurn();
+            yield computerTurn();
+            yield roundEvaluation();
+            return; // További végrehajtás megállítása!!
+        }
+    });
+}
+function handleComputerWins() {
+    return __awaiter(this, void 0, void 0, function* () {
+        for (let i = 0; i < tempCardholder.length; ++i) {
+            computerOwnedCards += 1;
+            if (tempCardholder[i] >= 10 && tempCardholder[i] < 12) {
+                computerPoints += 1;
+            }
+        }
+        renderAfterRound();
+        if (deck.length === 0 &&
+            playerCards.length === 0 &&
+            computerCards.length === 0) {
+            setTimeout(() => {
+                endGame();
+            }, 2000);
+            setTimeout(() => {
+                playerGameTable.classList.remove("sign");
+                startButton.style.visibility = "visible";
+                location.reload();
+            }, 2500);
+        }
+        else {
+            yield computerTurn();
+            yield playerTurn();
+            yield roundEvaluation();
+            return; // További végrehajtás megállítása!!
+        }
+    });
+}
+function passFunction() {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield handleComputerWins();
+    });
+}
+function kiertekeles() {
+    return __awaiter(this, void 0, void 0, function* () {
     });
 }
 function startGame() {
