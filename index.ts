@@ -8,7 +8,7 @@ let gameTable = document.querySelector(".js-game-table") as HTMLElement;
 let firstCardKey: number = 0;
 
 let playerCards: any[] = []; // játékos lapjai ENNEK A TÍPUSÁT KÉSŐBB ÁTÍRNI
-let playerKeys: number[] = []; // játékos lap értékei
+let playerKeys: string[] = []; // játékos lap értékei
 let playerEarnedCards: [] = []; // játékos megszerzett lapok
 let playerCurrentKey: string = "";
 let playerImgAlt: string = "";
@@ -16,7 +16,7 @@ let playerPoints: number = 0;
 let playerOwnedCards: number = 0;
 
 let computerCards: any[] = []; // computer lapjai
-let computerKeys: any[] = []; // computer lap értékei
+let computerKeys: string[] = []; // computer lap értékei
 let computerEarnedCards: [] = []; // computer megszerzett lapok
 let computerCurrentKey: string = "";
 let computerImgAlt: string = "";
@@ -169,8 +169,8 @@ function renderAfterRound() {
   // dealCardsForPlayerAndComputer();
   tempCardholder = [];
   tempAnswer = "";
-  // playerKeys = getCardKeys(playerCards).flat();
-  // computerKeys = getCardKeys(computerCards).flat();
+  playerKeys = getCardKeys(playerCards);
+  computerKeys = getCardKeys(computerCards);
   renderDatas();
 }
 
@@ -252,7 +252,7 @@ function dealCardsForPlayerAndComputer() {
 
 // Kártyák értékének kinyerése
 
-function getCardKeys(cards: any[]): number[] {
+function getCardKeys(cards: any[]): string[] {
   return cards.map((card) => card.value);
 }
 
@@ -294,12 +294,12 @@ function playerManageCards() {
     function processPlayerCard(selectedAlt: string) {
       let index = playerCards.findIndex((card) => card.img.alt === selectedAlt);
       if (index > -1) {
-        playerCards.splice(index, 1);
-        updateGameTable(playerCards, playerGameTable);
         playerImgAlt = selectedAlt;
         playerCurrentKey = selectedAlt.slice(1);
         tempCardholder.push(playerCurrentKey);
         playerKeys.splice(index, 1);
+        playerCards.splice(index, 1);
+        updateGameTable(playerCards, playerGameTable);
       }
       console.log("playerKeys: ", playerKeys);
 
@@ -420,7 +420,8 @@ function playComputerCard(cardKey: string) {
 function findValidCard() {
   if (gameField !== null && gameField.firstChild instanceof HTMLImageElement) {
     const firstChild = gameField.firstChild;
-    let validCard = computerKeys.find(
+    let numArr: string[] = computerKeys.map((str) => str.slice(1));
+    let validCard = numArr.find(
       (key) => key === firstChild.alt.slice(1) || key === "12"
     );
     if (!validCard) {
@@ -428,7 +429,7 @@ function findValidCard() {
         key.slice(1)
       );
       validCard = computerCardNumbers.find((key) => {
-        ["2", "3", "4", "8", "9"].includes(key);
+        return ["2", "3", "4", "8", "9"].includes(key);
       });
     }
     if (!validCard) {
@@ -436,7 +437,7 @@ function findValidCard() {
         key.slice(1)
       );
       validCard = computerCardNumbers.find((key) => {
-        ["10", "11", "12"].includes(key);
+        return ["10", "11", "12"].includes(key);
       });
     }
     return validCard;
@@ -461,11 +462,10 @@ async function playerTurn() {
     // Itt szerintem az utolsó 2 feltétel értelmetlen.
     // }
     if (gameField.firstChild.className === "computer-card") {
-        await playerManageCards();
-        setTimeout(async () => {
-          await roundEvaluation();
-        }, 2000);
-        
+      await playerManageCards();
+      setTimeout(async () => {
+        await roundEvaluation();
+      }, 2000);
     }
     // A másik kódban lévő 2. feltétel az előző után jön, fölösleges.
   }
@@ -487,8 +487,8 @@ async function playerTurn() {
       if (
         (gameField.firstChild !== null &&
           gameField.firstChild instanceof HTMLImageElement &&
-          playerKeys.includes(Number(gameField.firstChild.alt.slice(1)))) ||
-        playerKeys.includes(12)
+          playerKeys.includes(gameField.firstChild.alt.slice(1))) ||
+        playerKeys.includes("12")
       ) {
         await playerManageCards();
         return;
@@ -497,7 +497,6 @@ async function playerTurn() {
         setTimeout(async () => {
           await roundEvaluation();
         }, 2000);
-        
       }
     } else if (
       gameField.childElementCount > 0 &&
@@ -510,7 +509,6 @@ async function playerTurn() {
       setTimeout(async () => {
         await roundEvaluation();
       }, 2000);
-      
     }
   }
 
@@ -519,16 +517,15 @@ async function playerTurn() {
   if (playerKeys.length < 4) {
     // 3.1 feltétel: Ha a játékosnak van ütőlapja
     if (
-      playerKeys.includes(12) ||
+      playerKeys.includes("12") ||
       (gameField.firstChild instanceof HTMLImageElement &&
         gameField.firstChild !== null &&
-        playerKeys.includes(Number(gameField.firstChild.alt.slice(1))))
+        playerKeys.includes(gameField.firstChild.alt.slice(1)))
     ) {
       await playerManageCards();
       setTimeout(async () => {
         await roundEvaluation();
       }, 2000);
-      
     }
   }
 }
@@ -643,7 +640,76 @@ async function passFunction() {
 }
 
 async function kiertekeles() {
+  debugger;
+  if (gameField.childElementCount === 0) {
+    return;
+  }
 
+  if (
+    gameField.firstChild instanceof HTMLImageElement &&
+    gameField.lastChild instanceof HTMLImageElement
+  ) {
+    let firstCardValue = gameField?.firstChild?.alt?.slice(1);
+    let lastCardValue = gameField?.lastChild?.alt?.slice(1);
+    let firstCardComputer = gameField?.firstChild.className === "computer-card"; // Ez egy boolean érték.
+    let playerKeysInNum = playerKeys.map((key) => key.slice(1));
+    let computerKeysInNum = computerKeys.map((key) => key.slice(1));
+
+    // Ha a játékos kezdi a kört, vagyis övé az első lap.
+
+    if (firstCardComputer === false) {
+      // Ha a computer ugyanazt a lapot rakta mint a játékos, vagy 7-est, és a játékos nem tud érdemben lépni.
+      if (
+        firstCardValue === lastCardValue ||
+        (lastCardValue === "12" &&
+          !playerKeysInNum.includes(firstCardValue) &&
+          !playerKeysInNum.includes("12"))
+      ) {
+        handleComputerWins();
+        return roundEvaluation();
+      }
+      // Ha a játékosnak van olyan lapja, amit lerakott, vagy 7-es lapja.
+      else if (
+        (playerKeysInNum.includes(firstCardValue) ||
+          playerKeysInNum.includes("12")) &&
+        (firstCardValue === lastCardValue || lastCardValue === "12")
+      ) {
+        await nextPlayerRound();
+        return;
+      }
+      // Ha a computer lapja nem egyezik a játékos lapjával, vagy nem 7-es.
+      else if (lastCardValue !== firstCardValue || lastCardValue !== "12") {
+        handlePlayerWins();
+        return roundEvaluation();
+      } else {
+        // Ha a játékosnak nincs olyan lapja, amit lerakott, vagy 7-es lapja.
+        handleComputerWins();
+        return roundEvaluation();
+      }
+    }
+
+    // Ha a computer kezdi a kört, vagyis övé az első lap.
+
+    if (firstCardComputer === true) {
+      // Ha a játékos lapja nem egyezik a computer lapjával, vagy nem 7-es.
+      if (lastCardValue !== firstCardValue || lastCardValue !== "12") {
+        handleComputerWins();
+        return roundEvaluation();
+      }
+      // Ha a computernek van olyan lapja, amit lerakott, vagy 7-es lapja.
+      else if (
+        computerKeysInNum.includes(firstCardValue) ||
+        computerKeysInNum.includes("12")
+      ) {
+        await nextComputerRound();
+        return;
+      } else {
+        // Ha a computernek nincs olyan lapja, amit lerakott, vagy 7-es lapja.
+        handlePlayerWins();
+        return roundEvaluation();
+      }
+    }
+  }
 }
 
 async function startGame() {
@@ -654,9 +720,12 @@ async function startGame() {
   playerKeys = getCardKeys(playerCards);
   computerKeys = getCardKeys(computerCards);
   renderDatas();
+  isDisabledPassBtn();
   startButtonVisibility();
-  // await playerTurn();
+  await playerTurn();
   await computerTurn();
+  await roundEvaluation();
 }
 
 startButton.addEventListener("click", startGame);
+playerPassButton.addEventListener("click", passFunction);
