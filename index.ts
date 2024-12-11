@@ -312,9 +312,68 @@ function playerManageCards() {
   });
 }
 
+function playComputerCard(cardKey: string) {
+  // A computerKey szám
+  console.log("computer keys: ", computerKeys);
+  let numArr: string[] = computerKeys.map((str) => str.slice(1));
+  let isContains: number = Number(numArr.indexOf(cardKey)); // A computer adott lapjának az indexe.
+  computerCurrentKey = computerKeys[isContains];
+  tempCardholder.push(computerCurrentKey.slice(1)); // Itt valami elmegy...
+
+  // let computerIndex = computerKeys.findIndex((card) => {
+  //   card === Number(computerCurrentKey);
+  // });
+  let computerCurrentCard: string = computerKeys[isContains];
+  computerKeys.splice(isContains, 1);
+
+  if (computerCurrentCard) {
+    console.log("computer cards: ", computerCards);
+    let cardHtml = computerCards[isContains].img;
+    let cardHtmlValue = computerCards[isContains].value;
+    // Itt a cardHtml egy objektum, ami tartalmazza value-t, és az img-t is. (Ha az 1-es index nincs ott.)
+    // Kell egy img tag, aminek az src lesz a cardHtml
+    let tempDiv = document.createElement("img");
+    tempDiv.src = cardHtml;
+    tempDiv.alt = cardHtmlValue;
+    tempDiv.classList.add("computer-card");
+    gameField.appendChild(tempDiv);
+    computerCards.splice(isContains, 1);
+    updateGameTable(computerCards, computerGameTable);
+  }
+}
+
+// Computer számára lap keresése
+
+function findValidCard() {
+  if (gameField !== null && gameField.firstChild instanceof HTMLImageElement) {
+    const firstChild = gameField.firstChild;
+    let numArr: string[] = computerKeys.map((str) => str.slice(1));
+    let validCard = numArr.find(
+      (key) => key === firstChild.alt.slice(1) || key === "12"
+    );
+    if (!validCard) {
+      let computerCardNumbers: string[] = computerKeys.map((key) =>
+        key.slice(1)
+      );
+      validCard = computerCardNumbers.find((key) => {
+        return ["2", "3", "4", "8", "9"].includes(key);
+      });
+    }
+    if (!validCard) {
+      let computerCardNumbers: string[] = computerKeys.map((key) =>
+        key.slice(1)
+      );
+      validCard = computerCardNumbers.find((key) => {
+        return ["10", "11", "12"].includes(key);
+      });
+    }
+    return validCard;
+  }
+}
+
 // Computer manage cards
 
-async function computerManageCards() {
+function computerManageCards() {
   // debugger;
   // Ha a játékos kezdett, és a computer reagál rá
   if (
@@ -436,65 +495,6 @@ async function computerManageCards() {
   let validCard = findValidCard();
   if (validCard) {
     playComputerCard(validCard);
-  }
-}
-
-function playComputerCard(cardKey: string) {
-  // A computerKey szám
-  console.log("computer keys: ", computerKeys);
-  let numArr: string[] = computerKeys.map((str) => str.slice(1));
-  let isContains: number = Number(cardKey); // A computer adott lapjának az indexe.
-  computerCurrentKey = computerKeys[isContains];
-  tempCardholder.push(computerCurrentKey.slice(1)); // Itt valami elmegy...
-
-  // let computerIndex = computerKeys.findIndex((card) => {
-  //   card === Number(computerCurrentKey);
-  // });
-  let computerCurrentCard: string = computerKeys[isContains];
-  computerKeys.splice(isContains, 1);
-
-  if (computerCurrentCard) {
-    console.log("computer cards: ", computerCards);
-    let cardHtml = computerCards[isContains].img;
-    let cardHtmlValue = computerCards[isContains].value;
-    // Itt a cardHtml egy objektum, ami tartalmazza value-t, és az img-t is. (Ha az 1-es index nincs ott.)
-    // Kell egy img tag, aminek az src lesz a cardHtml
-    let tempDiv = document.createElement("img");
-    tempDiv.src = cardHtml;
-    tempDiv.alt = cardHtmlValue;
-    tempDiv.classList.add("computer-card");
-    gameField.appendChild(tempDiv);
-    computerCards.splice(isContains, 1);
-    updateGameTable(computerCards, computerGameTable);
-  }
-}
-
-// Computer számára lap keresése
-
-function findValidCard() {
-  if (gameField !== null && gameField.firstChild instanceof HTMLImageElement) {
-    const firstChild = gameField.firstChild;
-    let numArr: string[] = computerKeys.map((str) => str.slice(1));
-    let validCard = numArr.find(
-      (key) => key === firstChild.alt.slice(1) || key === "12"
-    );
-    if (!validCard) {
-      let computerCardNumbers: string[] = computerKeys.map((key) =>
-        key.slice(1)
-      );
-      validCard = computerCardNumbers.find((key) => {
-        return ["2", "3", "4", "8", "9"].includes(key);
-      });
-    }
-    if (!validCard) {
-      let computerCardNumbers: string[] = computerKeys.map((key) =>
-        key.slice(1)
-      );
-      validCard = computerCardNumbers.find((key) => {
-        return ["10", "11", "12"].includes(key);
-      });
-    }
-    return validCard;
   }
 }
 
@@ -714,14 +714,14 @@ async function kiertekeles() {
     if (firstCardComputer === false) {
       // Ha a computer ugyanazt a lapot rakta mint a játékos, vagy 7-est, és a játékos nem tud érdemben lépni.
       if (
-        firstCardValue === lastCardValue ||
-        (lastCardValue === "12" &&
-          !playerKeysInNum.includes(firstCardValue) &&
-          !playerKeysInNum.includes("12"))
+        (firstCardValue === lastCardValue ||
+        lastCardValue === "12") &&
+          (!playerKeysInNum.includes(firstCardValue) || !playerKeysInNum.includes("12"))
       ) {
         handleComputerWins();
         return roundEvaluation();
       }
+      
       // Ha a játékosnak van olyan lapja, amit lerakott, vagy 7-es lapja.
       else if (
         (playerKeysInNum.includes(firstCardValue) ||

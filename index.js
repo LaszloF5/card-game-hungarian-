@@ -281,119 +281,11 @@ function playerManageCards() {
         });
     });
 }
-// Computer manage cards
-function computerManageCards() {
-    return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b;
-        // debugger;
-        // Ha a játékos kezdett, és a computer reagál rá
-        if (gameField.childElementCount === 1 &&
-            gameField.firstChild !== null &&
-            gameField.firstChild instanceof HTMLElement &&
-            gameField.firstChild.className !== "computer-card") {
-            // Első belső feltétel: ha van azonos lapja
-            if (gameField.firstChild instanceof HTMLImageElement &&
-                gameField.lastChild instanceof HTMLImageElement) {
-                let firstCardValue = (_b = (_a = gameField === null || gameField === void 0 ? void 0 : gameField.firstChild) === null || _a === void 0 ? void 0 : _a.alt) === null || _b === void 0 ? void 0 : _b.slice(1); // Ez egy szám
-                let nums = computerKeys.map((key) => key.toString().slice(1));
-                let sameValueCards = nums.filter((num) => {
-                    return num === firstCardValue;
-                });
-                if (sameValueCards.length > 0) {
-                    let validIndex = "0";
-                    for (let i = 0; i < nums.length; ++i) {
-                        if (nums[i] === sameValueCards[0]) {
-                            validIndex = i.toString();
-                            break;
-                        }
-                    }
-                    playComputerCard(validIndex);
-                    return;
-                }
-                else if (sameValueCards.length === 0) {
-                    let isSeven = nums.filter((num) => {
-                        return num === '12';
-                    });
-                    if (isSeven.length > 0) {
-                        playComputerCard(isSeven[0]);
-                        return;
-                    }
-                    // Második belső feltétel: ha nincs azonos lapja, de raknia kell valamit
-                    else {
-                        // Ezt a részt tesztelni
-                        let nums = computerKeys.map((key) => key.toString().slice(1));
-                        let lowValueCards = nums.filter((num) => {
-                            return ["2", "3", "4", "8", "9"].includes(num); // Helyes hívás
-                        });
-                        let randomCardKey = lowValueCards.length > 0
-                            ? lowValueCards[Math.floor(Math.random() * lowValueCards.length)]
-                            : computerKeys[Math.floor(Math.random() * computerKeys.length)];
-                        playComputerCard(randomCardKey);
-                        return;
-                    }
-                }
-            }
-        }
-        // Első eset: Ez csak a második körtől érvényes: Nem a computer kezdett és nincs olyan lapja amit a játékos rakott, vagy 7-es lapja.
-        if (gameField.childElementCount !== 0 &&
-            gameField.firstChild !== null &&
-            gameField.firstChild instanceof HTMLElement &&
-            gameField.firstChild.className === "computer-card" &&
-            computerCurrentKey !== playerCurrentKey &&
-            playerCurrentKey !== "12") {
-            return;
-        }
-        // Ez egy blokkoló, hogy ha a 3. körben is rakni akarna. Ezt később felülvizsgálni.
-        if (gameField.childElementCount === 6 &&
-            gameField.lastChild !== null &&
-            gameField.lastChild instanceof HTMLElement &&
-            gameField.lastChild.className === "computer-card") {
-            return;
-        }
-        // Ellenőrizzük, hogy a computer nem rak le újabb lapot, ha már két lap van lent és a computeré az utolsó
-        if (gameField.childElementCount === 2 &&
-            gameField.lastChild !== null &&
-            gameField.lastChild instanceof HTMLElement &&
-            gameField.lastChild.className === "computer-card") {
-            return;
-        }
-        // A második körtől érvényes: Ha a computer kezdte a kört, a játékos ütötte, akkor kötelező a computernek lapot raknia, ha nem tudja ütni, más lapot kell raknia, de valamit kötelező.
-        if (gameField.childElementCount > 0 &&
-            gameField.firstChild !== null &&
-            gameField.firstChild !== null &&
-            gameField.firstChild instanceof HTMLElement &&
-            (playerCurrentKey ===
-                gameField.firstChild.alt.slice(1) ||
-                playerCurrentKey === "12") &&
-            gameField.lastChild !== null &&
-            !computerKeys.includes(gameField.lastChild.alt) &&
-            !computerKeys.includes("12")) {
-            return roundEvaluation();
-        }
-        // Ha a gameField üres, a computer random lapot rak
-        if (gameField.childElementCount === 0) {
-            let nums = computerKeys.map((key) => key.toString().slice(1));
-            let lowValueCards = nums.filter((num) => {
-                return ["2", "3", "4", "8", "9"].includes(num); // Helyes hívás
-            });
-            let randomCardKey = lowValueCards.length > 0
-                ? lowValueCards[Math.floor(Math.random() * lowValueCards.length)]
-                : computerKeys[Math.floor(Math.random() * computerKeys.length)];
-            playComputerCard(randomCardKey);
-            return;
-        }
-        // Ha van még lap, és a computer képes érdemben játszani, akkor válasszuk ki a megfelelő kártyalapot.
-        let validCard = findValidCard();
-        if (validCard) {
-            playComputerCard(validCard);
-        }
-    });
-}
 function playComputerCard(cardKey) {
     // A computerKey szám
     console.log("computer keys: ", computerKeys);
     let numArr = computerKeys.map((str) => str.slice(1));
-    let isContains = Number(cardKey); // A computer adott lapjának az indexe.
+    let isContains = Number(numArr.indexOf(cardKey)); // A computer adott lapjának az indexe.
     computerCurrentKey = computerKeys[isContains];
     tempCardholder.push(computerCurrentKey.slice(1)); // Itt valami elmegy...
     // let computerIndex = computerKeys.findIndex((card) => {
@@ -435,6 +327,112 @@ function findValidCard() {
             });
         }
         return validCard;
+    }
+}
+// Computer manage cards
+function computerManageCards() {
+    var _a, _b;
+    // debugger;
+    // Ha a játékos kezdett, és a computer reagál rá
+    if (gameField.childElementCount === 1 &&
+        gameField.firstChild !== null &&
+        gameField.firstChild instanceof HTMLElement &&
+        gameField.firstChild.className !== "computer-card") {
+        // Első belső feltétel: ha van azonos lapja
+        if (gameField.firstChild instanceof HTMLImageElement &&
+            gameField.lastChild instanceof HTMLImageElement) {
+            let firstCardValue = (_b = (_a = gameField === null || gameField === void 0 ? void 0 : gameField.firstChild) === null || _a === void 0 ? void 0 : _a.alt) === null || _b === void 0 ? void 0 : _b.slice(1); // Ez egy szám
+            let nums = computerKeys.map((key) => key.toString().slice(1));
+            let sameValueCards = nums.filter((num) => {
+                return num === firstCardValue;
+            });
+            if (sameValueCards.length > 0) {
+                let validIndex = "0";
+                for (let i = 0; i < nums.length; ++i) {
+                    if (nums[i] === sameValueCards[0]) {
+                        validIndex = i.toString();
+                        break;
+                    }
+                }
+                playComputerCard(validIndex);
+                return;
+            }
+            else if (sameValueCards.length === 0) {
+                let isSeven = nums.filter((num) => {
+                    return num === '12';
+                });
+                if (isSeven.length > 0) {
+                    playComputerCard(isSeven[0]);
+                    return;
+                }
+                // Második belső feltétel: ha nincs azonos lapja, de raknia kell valamit
+                else {
+                    // Ezt a részt tesztelni
+                    let nums = computerKeys.map((key) => key.toString().slice(1));
+                    let lowValueCards = nums.filter((num) => {
+                        return ["2", "3", "4", "8", "9"].includes(num); // Helyes hívás
+                    });
+                    let randomCardKey = lowValueCards.length > 0
+                        ? lowValueCards[Math.floor(Math.random() * lowValueCards.length)]
+                        : computerKeys[Math.floor(Math.random() * computerKeys.length)];
+                    playComputerCard(randomCardKey);
+                    return;
+                }
+            }
+        }
+    }
+    // Első eset: Ez csak a második körtől érvényes: Nem a computer kezdett és nincs olyan lapja amit a játékos rakott, vagy 7-es lapja.
+    if (gameField.childElementCount !== 0 &&
+        gameField.firstChild !== null &&
+        gameField.firstChild instanceof HTMLElement &&
+        gameField.firstChild.className === "computer-card" &&
+        computerCurrentKey !== playerCurrentKey &&
+        playerCurrentKey !== "12") {
+        return;
+    }
+    // Ez egy blokkoló, hogy ha a 3. körben is rakni akarna. Ezt később felülvizsgálni.
+    if (gameField.childElementCount === 6 &&
+        gameField.lastChild !== null &&
+        gameField.lastChild instanceof HTMLElement &&
+        gameField.lastChild.className === "computer-card") {
+        return;
+    }
+    // Ellenőrizzük, hogy a computer nem rak le újabb lapot, ha már két lap van lent és a computeré az utolsó
+    if (gameField.childElementCount === 2 &&
+        gameField.lastChild !== null &&
+        gameField.lastChild instanceof HTMLElement &&
+        gameField.lastChild.className === "computer-card") {
+        return;
+    }
+    // A második körtől érvényes: Ha a computer kezdte a kört, a játékos ütötte, akkor kötelező a computernek lapot raknia, ha nem tudja ütni, más lapot kell raknia, de valamit kötelező.
+    if (gameField.childElementCount > 0 &&
+        gameField.firstChild !== null &&
+        gameField.firstChild !== null &&
+        gameField.firstChild instanceof HTMLElement &&
+        (playerCurrentKey ===
+            gameField.firstChild.alt.slice(1) ||
+            playerCurrentKey === "12") &&
+        gameField.lastChild !== null &&
+        !computerKeys.includes(gameField.lastChild.alt) &&
+        !computerKeys.includes("12")) {
+        return roundEvaluation();
+    }
+    // Ha a gameField üres, a computer random lapot rak
+    if (gameField.childElementCount === 0) {
+        let nums = computerKeys.map((key) => key.toString().slice(1));
+        let lowValueCards = nums.filter((num) => {
+            return ["2", "3", "4", "8", "9"].includes(num); // Helyes hívás
+        });
+        let randomCardKey = lowValueCards.length > 0
+            ? lowValueCards[Math.floor(Math.random() * lowValueCards.length)]
+            : computerKeys[Math.floor(Math.random() * computerKeys.length)];
+        playComputerCard(randomCardKey);
+        return;
+    }
+    // Ha van még lap, és a computer képes érdemben játszani, akkor válasszuk ki a megfelelő kártyalapot.
+    let validCard = findValidCard();
+    if (validCard) {
+        playComputerCard(validCard);
     }
 }
 function playerTurn() {
@@ -638,10 +636,9 @@ function kiertekeles() {
             // Ha a játékos kezdi a kört, vagyis övé az első lap.
             if (firstCardComputer === false) {
                 // Ha a computer ugyanazt a lapot rakta mint a játékos, vagy 7-est, és a játékos nem tud érdemben lépni.
-                if (firstCardValue === lastCardValue ||
-                    (lastCardValue === "12" &&
-                        !playerKeysInNum.includes(firstCardValue) &&
-                        !playerKeysInNum.includes("12"))) {
+                if ((firstCardValue === lastCardValue ||
+                    lastCardValue === "12") &&
+                    (!playerKeysInNum.includes(firstCardValue) || !playerKeysInNum.includes("12"))) {
                     handleComputerWins();
                     return roundEvaluation();
                 }
