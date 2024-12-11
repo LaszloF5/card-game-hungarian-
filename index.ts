@@ -32,7 +32,7 @@ let playerPassButton = document.querySelector(
   ".js-player-pass-button"
 ) as HTMLButtonElement;
 
-let tempCardholder: any[] = [];
+let tempCardholder: string[] = [];
 let tempAnswer: string = "";
 
 type Card = {
@@ -144,7 +144,7 @@ function renderDatas() {
           <li>Computer lapjainak az értéke: ${computerKeys} </li>
         <li>Asztalon lévő lapok értéke: ${tempCardholder}</li>
                ;`;
-    // isDisabledPassBtn();
+    isDisabledPassBtn();
   }
 }
 
@@ -166,7 +166,7 @@ function toTheBaseState() {
 
 function renderAfterRound() {
   gameField.innerHTML = "";
-  // dealCardsForPlayerAndComputer();
+  dealCardsForPlayerAndComputer();
   tempCardholder = [];
   tempAnswer = "";
   playerKeys = getCardKeys(playerCards);
@@ -292,17 +292,15 @@ function playerManageCards() {
       }
     }
     function processPlayerCard(selectedAlt: string) {
-      let index = playerCards.findIndex((card) => card.img.alt === selectedAlt);
+      let index = playerCards.findIndex((card) => card.value === selectedAlt);
       if (index > -1) {
         playerImgAlt = selectedAlt;
         playerCurrentKey = selectedAlt.slice(1);
         tempCardholder.push(playerCurrentKey);
         playerKeys.splice(index, 1);
         playerCards.splice(index, 1);
-        updateGameTable(playerCards, playerGameTable);
       }
       console.log("playerKeys: ", playerKeys);
-
       renderDatas();
       playerGameTable.removeEventListener("click", handleClick);
       playerGameTable.classList.remove("sign");
@@ -316,7 +314,63 @@ function playerManageCards() {
 
 // Computer manage cards
 
-function computerManageCards() {
+async function computerManageCards() {
+  // debugger;
+  // Ha a játékos kezdett, és a computer reagál rá
+  if (
+    gameField.childElementCount === 1 &&
+    gameField.firstChild !== null &&
+    gameField.firstChild instanceof HTMLElement &&
+    gameField.firstChild.className !== "computer-card"
+  ) {
+    // Első belső feltétel: ha van azonos lapja
+    if (
+      gameField.firstChild instanceof HTMLImageElement &&
+      gameField.lastChild instanceof HTMLImageElement
+    ) {
+      let firstCardValue = gameField?.firstChild?.alt?.slice(1); // Ez egy szám
+      let nums: string[] = computerKeys.map((key) => key.toString().slice(1));
+      let sameValueCards: string[] = nums.filter((num) => {
+        return num === firstCardValue;
+      });
+      if (sameValueCards.length > 0) {
+        let validIndex: string = "0";
+        for (let i = 0; i < nums.length; ++i) {
+          if (nums[i] === sameValueCards[0]) {
+            validIndex = i.toString();
+            break;
+          }
+        }
+        playComputerCard(validIndex);
+        return;
+      } else if (sameValueCards.length === 0) {
+        let isSeven: string[] = nums.filter((num) => {
+          return num === '12';
+        });
+        if (isSeven.length > 0) {
+          playComputerCard(isSeven[0]);
+          return;
+        }
+        // Második belső feltétel: ha nincs azonos lapja, de raknia kell valamit
+        else {
+          // Ezt a részt tesztelni
+          let nums: string[] = computerKeys.map((key) =>
+            key.toString().slice(1)
+          );
+          let lowValueCards: string[] = nums.filter((num) => {
+            return ["2", "3", "4", "8", "9"].includes(num); // Helyes hívás
+          });
+
+          let randomCardKey: string =
+            lowValueCards.length > 0
+              ? lowValueCards[Math.floor(Math.random() * lowValueCards.length)]
+              : computerKeys[Math.floor(Math.random() * computerKeys.length)];
+          playComputerCard(randomCardKey);
+          return;
+        }
+      }
+    }
+  }
   // Első eset: Ez csak a második körtől érvényes: Nem a computer kezdett és nincs olyan lapja amit a játékos rakott, vagy 7-es lapja.
   if (
     gameField.childElementCount !== 0 &&
@@ -324,7 +378,7 @@ function computerManageCards() {
     gameField.firstChild instanceof HTMLElement &&
     gameField.firstChild.className === "computer-card" &&
     computerCurrentKey !== playerCurrentKey &&
-    Number(playerCurrentKey) !== 12
+    playerCurrentKey !== "12"
   ) {
     return;
   }
@@ -373,7 +427,7 @@ function computerManageCards() {
       lowValueCards.length > 0
         ? lowValueCards[Math.floor(Math.random() * lowValueCards.length)]
         : computerKeys[Math.floor(Math.random() * computerKeys.length)];
-    playComputerCard(randomCardKey);
+        playComputerCard(randomCardKey);
     return;
   }
 
@@ -389,9 +443,9 @@ function playComputerCard(cardKey: string) {
   // A computerKey szám
   console.log("computer keys: ", computerKeys);
   let numArr: string[] = computerKeys.map((str) => str.slice(1));
-  let isContains: number = numArr.indexOf(cardKey); // A computer adott lapjának az indexe.
+  let isContains: number = Number(cardKey); // A computer adott lapjának az indexe.
   computerCurrentKey = computerKeys[isContains];
-  tempCardholder.push(computerCurrentKey);
+  tempCardholder.push(computerCurrentKey.slice(1)); // Itt valami elmegy...
 
   // let computerIndex = computerKeys.findIndex((card) => {
   //   card === Number(computerCurrentKey);
@@ -537,8 +591,8 @@ async function playerTurn() {
 // }
 
 async function computerTurn() {
-  setTimeout(() => {
-    computerManageCards();
+  setTimeout(async () => {
+    await computerManageCards();
   }, 1000);
 }
 
@@ -580,7 +634,7 @@ async function roundEvaluation() {
 async function handlePlayerWins() {
   for (let i = 0; i < tempCardholder.length; ++i) {
     playerOwnedCards += 1;
-    if (tempCardholder[i] >= 10 && tempCardholder[i] < 12) {
+    if (tempCardholder[i] >= "10" && tempCardholder[i] < "12") {
       playerPoints += 1;
     }
   }
@@ -609,7 +663,7 @@ async function handlePlayerWins() {
 async function handleComputerWins() {
   for (let i = 0; i < tempCardholder.length; ++i) {
     computerOwnedCards += 1;
-    if (tempCardholder[i] >= 10 && tempCardholder[i] < 12) {
+    if (tempCardholder[i] >= "10" && tempCardholder[i] < "12") {
       computerPoints += 1;
     }
   }
@@ -640,7 +694,7 @@ async function passFunction() {
 }
 
 async function kiertekeles() {
-  debugger;
+  // debugger;
   if (gameField.childElementCount === 0) {
     return;
   }
