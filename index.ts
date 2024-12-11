@@ -253,7 +253,7 @@ function dealCardsForPlayerAndComputer() {
 // Kártyák értékének kinyerése
 
 function getCardKeys(cards: any[]): string[] {
-  return cards.map((card) => card.value);
+  return cards.map((card) => card.value.trim());
 }
 
 // Player manage cards
@@ -311,13 +311,17 @@ function playerManageCards() {
     });
   });
 }
-
+// Első kört tesztelni !!!!!!!!
 function playComputerCard(cardKey: string) {
   // A computerKey szám
   console.log("computer keys: ", computerKeys);
   let numArr: string[] = computerKeys.map((str) => str.slice(1));
-  let isContains: number = Number(numArr.indexOf(cardKey)); // A computer adott lapjának az indexe.
-  computerCurrentKey = computerKeys[isContains];
+  let indexNum: number = Number(cardKey);
+  let isContains: any = numArr[indexNum]; // A computer adott lapjának az indexe.
+  // Itt valami konzekvens megoldás kell, a cardKey-nek mindig az index értékének kell lennie.
+  // Ha azonos lapot rak a computer, akkor az indexet adja át.
+  // computerCurrentKey = computerKeys[isContains]; Ez nem jó
+  computerCurrentKey = computerKeys[Number(cardKey)]
   tempCardholder.push(computerCurrentKey.slice(1)); // Itt valami elmegy...
 
   // let computerIndex = computerKeys.findIndex((card) => {
@@ -374,7 +378,6 @@ function findValidCard() {
 // Computer manage cards
 
 function computerManageCards() {
-  // debugger;
   // Ha a játékos kezdett, és a computer reagál rá
   if (
     gameField.childElementCount === 1 &&
@@ -390,17 +393,19 @@ function computerManageCards() {
       let firstCardValue = gameField?.firstChild?.alt?.slice(1); // Ez egy szám
       let nums: string[] = computerKeys.map((key) => key.toString().slice(1));
       let sameValueCards: string[] = nums.filter((num) => {
-        return num === firstCardValue;
+        return num.trim() === firstCardValue.trim();
       });
       if (sameValueCards.length > 0) {
         let validIndex: string = "0";
+        // Ez a for ciklus valszeg már nem kell.
         for (let i = 0; i < nums.length; ++i) {
           if (nums[i] === sameValueCards[0]) {
             validIndex = i.toString();
             break;
           }
         }
-        playComputerCard(validIndex);
+        let resultIndex: any = nums.indexOf(sameValueCards[0]);
+        playComputerCard(resultIndex);
         return;
       } else if (sameValueCards.length === 0) {
         let isSeven: string[] = nums.filter((num) => {
@@ -424,7 +429,9 @@ function computerManageCards() {
             lowValueCards.length > 0
               ? lowValueCards[Math.floor(Math.random() * lowValueCards.length)]
               : computerKeys[Math.floor(Math.random() * computerKeys.length)];
-          playComputerCard(randomCardKey);
+          let resultIndex: any = nums.indexOf(randomCardKey);
+          playComputerCard(resultIndex.toString());
+          // Valszeg ugyanezt kell csinálni majd akkor is, ha a computer kezdi a kört.
           return;
         }
       }
